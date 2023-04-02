@@ -4,6 +4,7 @@ import { type Server } from 'http'
 class Wss {
   wss: Websocket.Server
   connections: Websocket[] = []
+  commands: Record<string, Function> = {}
 
   constructor(server: Server) {
     this.wss = new Websocket.Server({
@@ -19,8 +20,17 @@ class Wss {
   }
 
   _onMessage(ws: Websocket, message: string): void {
-    for (const connection of this.connections) {
-      connection.send(message)
+    const { cmd, data }: { cmd: string, data: object } = JSON.parse(message)
+
+    if (!cmd) {
+      ws.send(this._createStringData('error', { error: 'command not informed' }))
+      return
+    }
+
+    try {
+      this.commands[cmd](ws, data)
+    } catch (error) {
+      ws.send(this._createStringData('error', { error: `command '${cmd}' isn't valid` }))
     }
   }
 
@@ -33,15 +43,19 @@ class Wss {
       return
     }
 
-    const formatedData = JSON.stringify({ cmd, data })
+    const stringData = this._createStringData(cmd, data)
 
     if (id) {
-      this.connections[id].send(formatedData)
+      this.connections[id].send(stringData)
     } else {
       this.connections.forEach(connection => {
-        connection.send(formatedData)
+        connection.send(stringData)
       })
     }
+  }
+
+  _createStringData(cmd: string, data: object): string {
+    return JSON.stringify({ cmd, data })
   }
 
   _createWsId(): string {
@@ -54,7 +68,7 @@ class Wss {
 
     this.connections[id] = ws
 
-    this.sendWs('conexao', { id }, id)
+    this.sendWs('connection', { id }, id)
   }
 }
 
