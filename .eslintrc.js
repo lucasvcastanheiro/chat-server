@@ -20,6 +20,8 @@ module.exports = {
   },
   ignorePatterns: [".eslintrc.js"],
   rules: {
-    '@typescript-eslint/space-before-function-paren': 0
+    '@typescript-eslint/space-before-function-paren': 0,
+    "@typescript-eslint/prefer-nullish-coalescing": 0,
+    "@typescript-eslint/strict-boolean-expressions": 0
   }
 }
