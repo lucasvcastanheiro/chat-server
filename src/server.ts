@@ -4,7 +4,7 @@ const server = (): void => {
   const PORT = 3000
 
   try {
-    app.listen(PORT, () => {
+    app.server.listen(PORT, () => {
       console.log(`Server is running at http://localhost:${PORT}`)
     })
   } catch (error) {
