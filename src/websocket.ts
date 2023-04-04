@@ -6,14 +6,12 @@ class Wss {
   connections: Websocket[] = []
   commands: Record<string, Function> = {}
 
-  constructor(server: Server) {
+  init(server: Server): void {
     this.wss = new Websocket.Server({
       server
     })
 
     this.wss.on('connection', (ws: Websocket, _req: any) => {
-      this.saveConnection(ws)
-
       ws.on('message', (message: string) => { this._onMessage(ws, message) })
       ws.on('error', this._onError)
     })
@@ -27,9 +25,18 @@ class Wss {
       return
     }
 
-    try {
-      this.commands[cmd](ws, data)
-    } catch (error) {
+    if (cmd === 'authentication') {
+      this._authentication(ws, data, cmd)
+      return
+    }
+
+    if (this.commands[cmd]) {
+      try {
+        this.commands[cmd](ws, data, cmd)
+      } catch (error) {
+        ws.send(this._createStringData('error', { error: error.message }))
+      }
+    } else {
       ws.send(this._createStringData('error', { error: `command '${cmd}' isn't valid` }))
     }
   }
@@ -48,9 +55,9 @@ class Wss {
     if (id) {
       this.connections[id].send(stringData)
     } else {
-      this.connections.forEach(connection => {
+      for (const connection of Object.values(this.connections)) {
         connection.send(stringData)
-      })
+      }
     }
   }
 
@@ -63,13 +70,20 @@ class Wss {
     return `#${randomDate}`
   }
 
-  saveConnection(ws: Websocket): void {
-    const id = this._createWsId()
+  _authentication(ws: Websocket, data: any, cmd: string): void {
+    let { id }: { id: string } = data
+
+    if (!id) {
+      id = this._createWsId()
+      ws.send(this._createStringData(cmd, { id }))
+    }
 
     this.connections[id] = ws
+  }
 
-    this.sendWs('connection', { id }, id)
+  addCommand(cmd: string, action: Function): void {
+    this.commands[cmd] = action
   }
 }
 
-export default Wss
+export default new Wss()
