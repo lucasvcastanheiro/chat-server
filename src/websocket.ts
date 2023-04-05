@@ -70,13 +70,15 @@ class Wss {
     return `#${randomDate}`
   }
 
-  _authentication(ws: Websocket, data: any, cmd: string): void {
+  _authentication(ws: any, data: any, cmd: string): void {
     let { id }: { id: string } = data
 
     if (!id) {
       id = this._createWsId()
       ws.send(this._createStringData(cmd, { id }))
     }
+
+    ws.id = id
 
     this.connections[id] = ws
   }
