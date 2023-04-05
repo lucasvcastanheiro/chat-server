@@ -8,7 +8,7 @@ class MessageRepository {
     })
   }
 
-  getMessages(): object[] {
+  getAllMessages(): object[] {
     return this._messages
   }
 }

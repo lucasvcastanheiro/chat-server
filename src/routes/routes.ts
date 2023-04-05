@@ -9,5 +9,6 @@ routes.get('/', (_req: Request, res: Response) => {
 })
 
 Wss.addCommand('newMessage', MessageController.newMessage)
+Wss.addCommand('getAllMessages', MessageController.getAllMessages)
 
 export default routes

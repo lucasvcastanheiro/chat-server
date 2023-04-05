@@ -9,7 +9,16 @@ class MessageController {
       MessageService.newMessage(message, id)
       Wss.sendWs(cmd, { message, userId: id })
     } catch (error) {
-      console.log(error)
+      throw new Error(error.message)
+    }
+  }
+
+  getAllMessages(ws, _data, cmd): void {
+    try {
+      const messages = MessageService.getAllMessages()
+      Wss.sendWs(cmd, { messages }, ws.id)
+    } catch (error) {
+      throw new Error(error.message)
     }
   }
 }
